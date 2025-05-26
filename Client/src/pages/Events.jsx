@@ -3,8 +3,15 @@ import Calendar from '../components/Calendar';
 
 const Events = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newEventDate, setNewEventDate] = useState('');
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    image: ''
+  });
 
-  const upcomingEvents = [
+  const [upcomingEvents, setUpcomingEvents] = useState([
     {
       title: 'Annual Townhall 2024',
       date: 'May 15, 2024',
@@ -26,34 +33,9 @@ const Events = () => {
       image: '/images/events/teambuilding.jpg',
       description: 'A fun-filled day to strengthen team bonds.',
     },
-  ];
+  ]);
 
-  const recentEvents = [
-    {
-      title: 'Q1 Review Meeting',
-      date: 'April 30, 2024',
-      location: 'Virtual',
-      image: '/images/events/q1review.jpg',
-      participants: 45,
-      description: 'Review of Q1 performance and setting goals for Q2.',
-    },
-    {
-      title: 'Employee Wellness Day',
-      date: 'April 25, 2024',
-      location: 'Company Gym',
-      image: '/images/events/wellness.jpg',
-      participants: 78,
-      description: 'A day dedicated to employee health and wellness.',
-    },
-    {
-      title: 'Tech Talk Series',
-      date: 'April 20, 2024',
-      location: 'Auditorium',
-      image: '/images/events/techtalk.jpg',
-      participants: 120,
-      description: 'Insights into the latest technology trends.',
-    },
-  ];
+  const recentEvents = [/* same as before */];
 
   const handleEventClick = (event) => {
     setSelectedEvent(event);
@@ -63,14 +45,33 @@ const Events = () => {
     setSelectedEvent(null);
   };
 
+  const handleDateClick = (date) => {
+    setNewEventDate(date.toDateString());
+    setShowCreateDialog(true);
+  };
+
+  const handleCreate = () => {
+    setUpcomingEvents([
+      ...upcomingEvents,
+      {
+        ...newEvent,
+        date: newEventDate,
+        location: 'TBD',
+      }
+    ]);
+    setNewEvent({ title: '', description: '', image: '' });
+    setShowCreateDialog(false);
+  };
+
   return (
+    <> 
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Company Events</h2>
-
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <Calendar />
+        <Calendar onDateClick={handleDateClick} />
       </div>
 
+      {/* Upcoming Events */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Upcoming Events</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -91,23 +92,7 @@ const Events = () => {
         </div>
       </div>
 
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Recent Events</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {recentEvents.map((event, i) => (
-            <div key={i} className="bg-white rounded-lg shadow">
-              <img src={event.image} alt={event.title} className="rounded-t-lg w-full h-48 object-cover" />
-              <div className="p-4">
-                <h4 className="text-xl font-bold">{event.title}</h4>
-                <p className="text-sm text-gray-500">{event.date} | {event.location}</p>
-                <p className="text-sm mt-2">{event.description}</p>
-                <p className="text-sm text-gray-600 mt-1">Participants: {event.participants}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
+      {/* Existing modal for viewing event */}
       {selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative">
@@ -124,11 +109,212 @@ const Events = () => {
           </div>
         </div>
       )}
+
+      {/* Modal for creating new event */}
+      {showCreateDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow max-w-md w-full relative">
+            <button className="absolute top-2 right-2" onClick={() => setShowCreateDialog(false)}>✕</button>
+            <h3 className="text-xl font-bold mb-4">Add Event for {newEventDate}</h3>
+            <input
+              type="text"
+              placeholder="Event Title"
+              className="w-full mb-2 p-2 border rounded"
+              value={newEvent.title}
+              onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+            />
+            <textarea
+              placeholder="Event Description"
+              className="w-full mb-2 p-2 border rounded"
+              value={newEvent.description}
+              onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setNewEvent({ ...newEvent, image: reader.result }); // Save as base64
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              className="border border-gray-300 p-2 rounded"
+            />
+            {newEvent.image && (
+              <img
+                src={newEvent.image}
+                alt="Uploaded"
+                className="w-32 h-32 mt-2 rounded object-cover"
+              />
+            )}
+            <br />
+            {/* <input
+              type="text"
+              placeholder="Image URL"
+              className="w-full mb-4 p-2 border rounded"
+              value={newEvent.image}
+              onChange={(e) => setNewEvent({ ...newEvent, image: e.target.value })}
+            /> */}
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+              onClick={handleCreate}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
     </div>
+  </>
   );
 };
 
 export default Events;
+
+
+
+
+
+
+
+
+
+
+// import React, { useState } from 'react';
+// import Calendar from '../components/Calendar';
+
+// const Events = () => {
+//   const [selectedEvent, setSelectedEvent] = useState(null);
+
+//   const upcomingEvents = [
+//     {
+//       title: 'Annual Townhall 2024',
+//       date: 'May 15, 2024',
+//       location: 'Main Conference Hall',
+//       image: '/images/events/townhall.jpg',
+//       description: 'Join us for the Annual Townhall to discuss company achievements and future plans.',
+//     },
+//     {
+//       title: 'Leadership Workshop',
+//       date: 'May 20, 2024',
+//       location: 'Training Room B',
+//       image: '/images/events/workshop.jpg',
+//       description: 'Enhance your leadership skills in this interactive workshop.',
+//     },
+//     {
+//       title: 'Team Building Event',
+//       date: 'May 25, 2024',
+//       location: 'Adventure Park',
+//       image: '/images/events/teambuilding.jpg',
+//       description: 'A fun-filled day to strengthen team bonds.',
+//     },
+//   ];
+
+//   const recentEvents = [
+//     {
+//       title: 'Q1 Review Meeting',
+//       date: 'April 30, 2024',
+//       location: 'Virtual',
+//       image: '/images/events/q1review.jpg',
+//       participants: 45,
+//       description: 'Review of Q1 performance and setting goals for Q2.',
+//     },
+//     {
+//       title: 'Employee Wellness Day',
+//       date: 'April 25, 2024',
+//       location: 'Company Gym',
+//       image: '/images/events/wellness.jpg',
+//       participants: 78,
+//       description: 'A day dedicated to employee health and wellness.',
+//     },
+//     {
+//       title: 'Tech Talk Series',
+//       date: 'April 20, 2024',
+//       location: 'Auditorium',
+//       image: '/images/events/techtalk.jpg',
+//       participants: 120,
+//       description: 'Insights into the latest technology trends.',
+//     },
+//   ];
+
+//   const handleEventClick = (event) => {
+//     setSelectedEvent(event);
+//   };
+
+//   const closeDialog = () => {
+//     setSelectedEvent(null);
+//   };
+
+//   return (
+//     <div className="p-6">
+//       <h2 className="text-2xl font-semibold mb-4">Company Events</h2>
+
+//       <div className="bg-white rounded-lg shadow p-4 mb-6">
+//         <Calendar />
+//       </div>
+
+//       <div className="mb-6">
+//         <h3 className="text-lg font-semibold mb-2">Upcoming Events</h3>
+//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//           {upcomingEvents.map((event, i) => (
+//             <div
+//               key={i}
+//               className="bg-white rounded-lg shadow cursor-pointer"
+//               onClick={() => handleEventClick(event)}
+//             >
+//               <img src={event.image} alt={event.title} className="rounded-t-lg w-full h-48 object-cover" />
+//               <div className="p-4">
+//                 <h4 className="text-xl font-bold">{event.title}</h4>
+//                 <p className="text-sm text-gray-500">{event.date} | {event.location}</p>
+//                 <p className="text-sm mt-2">{event.description}</p>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+
+//       <div className="mb-6">
+//         <h3 className="text-lg font-semibold mb-2">Recent Events</h3>
+//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//           {recentEvents.map((event, i) => (
+//             <div key={i} className="bg-white rounded-lg shadow">
+//               <img src={event.image} alt={event.title} className="rounded-t-lg w-full h-48 object-cover" />
+//               <div className="p-4">
+//                 <h4 className="text-xl font-bold">{event.title}</h4>
+//                 <p className="text-sm text-gray-500">{event.date} | {event.location}</p>
+//                 <p className="text-sm mt-2">{event.description}</p>
+//                 <p className="text-sm text-gray-600 mt-1">Participants: {event.participants}</p>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       </div>
+
+//       {selectedEvent && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+//           <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative">
+//             <button
+//               className="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+//               onClick={closeDialog}
+//             >
+//               ✕
+//             </button>
+//             <img src={selectedEvent.image} alt={selectedEvent.title} className="w-full h-64 object-cover rounded" />
+//             <h3 className="text-2xl font-bold mt-4">{selectedEvent.title}</h3>
+//             <p className="text-gray-600">{selectedEvent.date} | {selectedEvent.location}</p>
+//             <p className="mt-2">{selectedEvent.description}</p>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default Events;
 
 
 
